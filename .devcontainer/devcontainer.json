@@ -1,0 +1,26 @@
+{
+  "name": "Chainnodes Ethereum CL Proxy",
+  "dockerComposeFile": ["./docker-compose.devcontainer.yml"],
+  "service": "cl-proxy",
+  "shutdownAction": "stopCompose",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "eamodio.gitlens",
+        "ms-vsliveshare.vsliveshare",
+        "ms-azuretools.vscode-docker",
+        "juanblanco.solidity",
+        "sswg.swift-lang",
+        "vknabel.vscode-swiftformat",
+        "vknabel.vscode-swiftlint"
+      ],
+      "settings": {
+        "terminal.integrated.automationShell.linux": "/bin/bash"
+      }
+    }
+  },
+  "workspaceFolder": "/workspace",
+  "initializeCommand": "ls"
+}

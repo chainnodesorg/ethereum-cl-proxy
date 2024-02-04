@@ -1,0 +1,8 @@
+disabled_rules: # rule identifiers turned on by default to exclude from running
+  - identifier_name
+  - function_body_length
+  - trailing_comma
+excluded:
+  - .build
+  - .swiftpm
+  - Extensions

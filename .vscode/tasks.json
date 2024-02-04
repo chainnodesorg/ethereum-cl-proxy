@@ -1,0 +1,25 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "swift",
+      "args": ["build", "--product", "Run"],
+      "cwd": "/workspace",
+      "disableTaskQueue": true,
+      "problemMatcher": ["$swiftc"],
+      "group": "build",
+      "label": "swift: Build Debug Run",
+      "detail": "swift build --product Run"
+    },
+    {
+      "type": "swift",
+      "args": ["build", "-c", "release", "--product", "Run"],
+      "cwd": "/workspace",
+      "disableTaskQueue": true,
+      "problemMatcher": ["$swiftc"],
+      "group": "build",
+      "label": "swift: Build Release Run",
+      "detail": "swift build -c release --product Run"
+    }
+  ]
+}

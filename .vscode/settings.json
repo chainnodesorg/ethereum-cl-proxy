@@ -1,0 +1,13 @@
+{
+  "editor.formatOnSave": true,
+
+  // Probably CodeLLDB extension
+  "lldb.library": "/usr/lib/liblldb.so",
+
+  // Swift Format
+  "swiftformat.enable": true,
+  "swiftformat.onlyEnableOnSwiftPMProjects": false,
+  // Swift Lint
+  "swiftlint.enable": true,
+  "swiftlint.onlyEnableOnSwiftPMProjects": false
+}

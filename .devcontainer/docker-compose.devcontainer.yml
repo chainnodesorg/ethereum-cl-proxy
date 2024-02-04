@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  cl-proxy:
+    build:
+      dockerfile: ./devcontainer-proxy.dockerfile
+      context: .
+    command: sleep infinity
+    working_dir: /workspace
+    volumes:
+      - ../:/workspace
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
