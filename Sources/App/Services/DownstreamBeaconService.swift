@@ -13,9 +13,23 @@ class DownstreamBeaconService {
 
     private let beaconNodeConnections: NIOLockedValueBox<[BeaconNodeConnection]> = .init([])
 
+    private let eventsCache = TimeBasedEquivalenceCache(keyExpirySeconds: 600)
+
     enum Error: Swift.Error {
         case beaconNodeEndpointsMalformed(message: String)
     }
+
+    /// The callback used to notify upstream subscribers of new events.
+    typealias UpstreamSubscriptionCallback = (
+        _ event: BeaconAPI.Operations.eventstream.Input.Query.topicsPayloadPayload,
+        _ data: String
+    ) -> Void
+
+    /// Subscribers are saved here.
+    /// event type -> event subscription ids in a dictionary and their callbacks.
+    private let upstreamEventSubscriptions = NIOLockedValueBox<
+        [BeaconAPI.Operations.eventstream.Input.Query.topicsPayloadPayload: [String: UpstreamSubscriptionCallback]]
+    >([:])
 
     // MARK: - Initialization
 
@@ -62,24 +76,50 @@ class DownstreamBeaconService {
         }
     }
 
-    private let eventCounter = NIOLockedValueBox(0)
     private func eventResponse(
-        event _: BeaconAPI.Operations.eventstream.Input.Query.topicsPayloadPayload,
-        data _: String,
-        decodedData _: any Codable & Hashable & Sendable
+        event: BeaconAPI.Operations.eventstream.Input.Query.topicsPayloadPayload,
+        data: String,
+        decodedData: any Codable & Hashable & Sendable
     ) {
-        // print(event)
-        // print(data)
-        // print(decodedData)
-        eventCounter.withLockedValue {
-            $0 += 1
-            if $0 % 1000 == 0 {
-                self.app.logger.warning("Received \($0) events to date.")
+        let wasAddedBecauseNotSeenYet = eventsCache.addValueIfNotExists(decodedData)
+
+        if wasAddedBecauseNotSeenYet {
+            // Distribute the new event
+            let allSubscriptions = upstreamEventSubscriptions.withLockedValue { $0[event] } ?? [:]
+            for subscription in allSubscriptions {
+                subscription.value(event, data)
             }
         }
     }
 
-    // MARK: - Public API
+    // MARK: - Subscription APIs
+
+    func subscribe(
+        eventTypes: [BeaconAPI.Operations.eventstream.Input.Query.topicsPayloadPayload],
+        callback: @escaping UpstreamSubscriptionCallback
+    ) -> String {
+        let subscriptionId = UUID().uuidString.sha3(.keccak256)
+
+        upstreamEventSubscriptions.withLockedValue {
+            for event in eventTypes {
+                var oldSubscriptions = $0[event] ?? [:]
+                oldSubscriptions[subscriptionId] = callback
+                $0[event] = oldSubscriptions
+            }
+        }
+
+        return subscriptionId
+    }
+
+    func unsubscribe(subscriptionId: String) {
+        upstreamEventSubscriptions.withLockedValue {
+            for key in $0.keys {
+                var oldSubscriptions = $0[key] ?? [:]
+                oldSubscriptions[subscriptionId] = nil
+                $0[key] = oldSubscriptions
+            }
+        }
+    }
 }
 
 struct DownstreamBeaconServiceKey: StorageKey {
