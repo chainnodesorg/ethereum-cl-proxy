@@ -1,4 +1,5 @@
 import CoreMetrics
+import OpenAPIVapor
 import Prometheus
 import Vapor
 #if os(Linux)

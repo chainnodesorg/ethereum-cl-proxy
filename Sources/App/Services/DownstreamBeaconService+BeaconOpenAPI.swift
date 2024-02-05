@@ -4,26 +4,10 @@ import OpenAPIRuntime
 import OpenAPIVapor
 import Vapor
 
-struct ProxyController: RouteCollection, APIProtocol {
-    // MARK: - Properties
-
-    private let jsonEncoder = JSONEncoder()
-
-    private let app: Application
-
-    // MARK: - Initialization
-
-    init(app: Application) {
-        self.app = app
-    }
-
-    // MARK: - Normal Vapor RouteCollection
-
-    func boot(routes _: RoutesBuilder) throws {}
-
+extension DownstreamBeaconService {
     // MARK: - OpenAPI APIProtocol implementation
 
-    enum OpenAPIError: Error {
+    enum OpenAPIError: Swift.Error {
         case notImplemented
     }
 

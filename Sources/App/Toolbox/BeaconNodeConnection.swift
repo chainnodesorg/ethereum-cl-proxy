@@ -33,11 +33,13 @@ class BeaconNodeConnection {
     /// The event types this beacon node is known to support / should try to subscribe to.
     let allowedEventTypes: [BeaconAPI.Operations.eventstream.Input.Query.topicsPayloadPayload]
 
-    var eventCallback: (
-        BeaconAPI.Operations.eventstream.Input.Query.topicsPayloadPayload,
-        String,
-        any Codable & Hashable & Sendable
-    ) -> Void
+    var eventCallback: NIOLockedValueBox<
+        (
+            BeaconAPI.Operations.eventstream.Input.Query.topicsPayloadPayload,
+            String,
+            any Codable & Hashable & Sendable
+        ) -> Void
+    >
 
     // MARK: - EVENT SUBSCRIPTION Properties
 
@@ -129,7 +131,7 @@ class BeaconNodeConnection {
 
         self.allowedEventTypes = allowedEventTypes
 
-        self.eventCallback = eventCallback
+        self.eventCallback = .init(eventCallback)
 
         // Subscribe to events for this beacon node.
         initialSubscribeToNextEvent()
@@ -141,6 +143,11 @@ class BeaconNodeConnection {
     // MARK: - Event Subscription
 
     private func handleEvent(event: ServerSentEvent) {
+        // We don't want to deliver events to upstream if we consider ourselves to be unhealthy.
+        if !isHealthy(acceptableAge: .seconds(60)) {
+            return
+        }
+
         guard let eventString = event.event else {
             app.logger.debug("Received SSE without an event type - Beacon Node: \(beaconNodeUrl.absoluteString)")
             return
@@ -164,8 +171,25 @@ class BeaconNodeConnection {
             return
         }
 
-        // Send event to upstream
-        eventCallback(eventType, eventDataString, eventData)
+        if let _ = eventData as? BeaconAPI.BeaconAPIHeadEvent, eventType == .head {
+            // Schedule and register new head request to bump this connection before emitting the event.
+            // This is for further requests to go to the right connections as health checks happen only every n seconds.
+            app.eventLoopGroup.next().makeFutureWithTask {
+                let syncStatus = try await self.beaconNodeClient.getSyncingStatus()
+                let syncStatusJson = try syncStatus.ok.body.json
+
+                self.currentSyncHealthCheckResponse.withLockedValue { $0 = (response: syncStatusJson, time: Date()) }
+
+                // Now contact upstream.
+                self.eventCallback.withLockedValue { $0(eventType, eventDataString, eventData) }
+            }.whenFailure { _ in
+                self.app.logger
+                    .error("Could not fetch syncing status after head event - Beacon Node: \(self.beaconNodeUrl)")
+            }
+        } else {
+            // Just emit event immediately to upstream.
+            eventCallback.withLockedValue { $0(eventType, eventDataString, eventData) }
+        }
     }
 
     /// Warn: This function is not meant to be used by multiple threads. Call it once only on startup.
@@ -435,6 +459,17 @@ class BeaconNodeConnection {
 
         app.logger.error("Health check failed for beacon node - \(beaconNodeUrl)")
         app.logger.error("\(error)")
+    }
+}
+
+extension BeaconNodeConnection: Equatable, Hashable {
+    static func == (_ lhs: BeaconNodeConnection, _ rhs: BeaconNodeConnection) -> Bool {
+        lhs.beaconNodeUrl == rhs.beaconNodeUrl && lhs.allowedEventTypes == rhs.allowedEventTypes
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(beaconNodeUrl)
+        hasher.combine(allowedEventTypes)
     }
 }
 
