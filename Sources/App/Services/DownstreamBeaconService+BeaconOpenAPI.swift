@@ -5,7 +5,13 @@ import OpenAPIRuntime
 import OpenAPIVapor
 import Vapor
 
-extension DownstreamBeaconService {
+extension DownstreamBeaconService: APIProtocol {
+    // MARK: - Stream Cancellation
+
+    func cancelUpstreamEventStream(_ body: OpenAPIRuntime.HTTPBody) {
+        runningUpstreamBeaconNodeEventStreams.withLockedValue { $0[body] }?.cancelContinuation()
+    }
+
     // MARK: - OpenAPI APIProtocol implementation
 
     enum OpenAPIError: Swift.Error {
@@ -489,7 +495,6 @@ extension DownstreamBeaconService {
         let subscriptionId = NIOLockedValueBox<String>("")
 
         let stream = BeaconNodeEventStream(unsubscribeCallback: {
-            print("UNSUBSCRIBED!")
             self.unsubscribe(subscriptionId: subscriptionId.withLockedValue { $0 })
         })
 
@@ -505,19 +510,24 @@ extension DownstreamBeaconService {
         let responseBody: BeaconAPI.Operations.eventstream.Output.Ok.Body
         switch chosenContentType.contentType {
         default:
+            let httpBody = OpenAPIRuntime.HTTPBody(
+                stream.stream.map { event in
+                    ServerSentEvent(
+                        id: UUID().uuidString,
+                        event: event.event.rawValue,
+                        data: event.data,
+                        retry: 10000
+                    )
+                }.asEncodedServerSentEvents(),
+                length: .unknown,
+                iterationBehavior: .single
+            )
+            // Save for cancellation
+            runningUpstreamBeaconNodeEventStreams.withLockedValue { $0[httpBody] = stream }
+
+            // Set response body
             responseBody = .text_event_hyphen_stream(
-                .init(
-                    stream.stream.map { event in
-                        ServerSentEvent(
-                            id: UUID().uuidString,
-                            event: event.event.rawValue,
-                            data: event.data,
-                            retry: 10000
-                        )
-                    }.asEncodedServerSentEvents(),
-                    length: .unknown,
-                    iterationBehavior: .single
-                )
+                httpBody
             )
         }
 
@@ -568,7 +578,9 @@ final class BeaconNodeEventStream: Sendable {
 
     typealias StreamType = AsyncStream<BeaconNodeEvent>
 
-    private let unsubscribeCallback: () -> Void
+    private let lock: NIOLock = .init()
+
+    private let unsubscribeCallback: @Sendable () -> Void
 
     let stream: StreamType
     private let continuation: StreamType.Continuation
@@ -594,6 +606,14 @@ final class BeaconNodeEventStream: Sendable {
         _ event: BeaconAPI.Operations.eventstream.Input.Query.topicsPayloadPayload,
         _ data: String
     ) {
-        continuation.yield(.init(event: event, data: data))
+        _ = lock.withLock {
+            continuation.yield(.init(event: event, data: data))
+        }
+    }
+
+    func cancelContinuation() {
+        lock.withLock {
+            continuation.finish()
+        }
     }
 }

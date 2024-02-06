@@ -14,6 +14,9 @@ func routes(_ app: Application) throws {
     try app.register(collection: proxyController)
 
     // Register OpenAPI BeaconNode routes
-    let transport = VaporTransport(routesBuilder: app)
+    let transport = CustomVaporTransport(
+        routesBuilder: app,
+        streamErrorClosure: proxyController.streamErrorClosure(_:_:)
+    )
     try proxyController.registerHandlers(on: transport, serverURL: URL(string: "/")!)
 }

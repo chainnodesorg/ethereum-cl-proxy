@@ -1,6 +1,7 @@
 import BeaconAPI
 import Foundation
 import NIOConcurrencyHelpers
+import OpenAPIRuntime
 import Vapor
 import Web3
 
@@ -36,6 +37,11 @@ class DownstreamBeaconService {
     private let upstreamEventSubscriptions = NIOLockedValueBox<
         [BeaconAPI.Operations.eventstream.Input.Query.topicsPayloadPayload: [String: UpstreamSubscriptionCallback]]
     >([:])
+
+    /// Used in the OpenAPI event streams to unsubscribe streams that have been cancelled client side
+    /// DO NOT USE OUTSIDE OF DownstreamBeaconService and EXTENSTION OF IT
+    let runningUpstreamBeaconNodeEventStreams: NIOLockedValueBox<[OpenAPIRuntime.HTTPBody: BeaconNodeEventStream]> =
+        .init([:])
 
     // MARK: - Initialization
 
@@ -104,7 +110,8 @@ class DownstreamBeaconService {
                 return
             }
 
-            let wasAddedBecauseNotSeenYet = self.eventsCache.addValueIfNotExists(decodedData)
+            let copyOfDecodedData = decodedData
+            let wasAddedBecauseNotSeenYet = self.eventsCache.addValueIfNotExists(copyOfDecodedData.hashValue)
 
             if wasAddedBecauseNotSeenYet {
                 // Distribute the new event

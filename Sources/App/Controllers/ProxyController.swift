@@ -23,6 +23,11 @@ class ProxyController: RouteCollection, APIProtocol {
 
     // MARK: - OpenAPI APIProtocol implementation
 
+    func streamErrorClosure(_ body: OpenAPIRuntime.HTTPBody, _: Error) {
+        // For now we simply close the stream.
+        app.downstreamBeaconService.cancelUpstreamEventStream(body)
+    }
+
     enum OpenAPIError: Error {
         case notImplemented
     }
