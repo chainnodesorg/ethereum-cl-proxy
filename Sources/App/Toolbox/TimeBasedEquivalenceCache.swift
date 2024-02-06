@@ -31,25 +31,25 @@ class TimeBasedEquivalenceCache {
     ///
     /// - Parameter value: The value to check.
     /// - Returns: true if the value is in the cache, false if not.
-    public func valueExists(_ value: any Hashable) -> Bool {
+    public func valueExists(_ value: Int) -> Bool {
         lock.withLock {
             self.unsafeValueExists(value)
         }
     }
 
-    private func unsafeValueExists(_ value: any Hashable) -> Bool {
-        valueCache0[value.hashValue] == true || valueCache1[value.hashValue] == true
+    private func unsafeValueExists(_ value: Int) -> Bool {
+        valueCache0[value] == true || valueCache1[value] == true
     }
 
     /// Adds a value to the cache.
     /// - Parameter value: The value to add.
-    public func addValue(_ value: any Hashable) {
+    public func addValue(_ value: Int) {
         lock.withLock {
             self.unsafeAddValue(value)
         }
     }
 
-    private func unsafeAddValue(_ value: any Hashable) {
+    private func unsafeAddValue(_ value: Int) {
         let now = Int64(Date().timeIntervalSince1970)
 
         if valueCache0Timestamp >= valueCache1Timestamp {
@@ -58,10 +58,10 @@ class TimeBasedEquivalenceCache {
                 valueCache1Timestamp = now
                 valueCache1 = [:]
 
-                valueCache1[value.hashValue] = true
+                valueCache1[value] = true
             } else {
                 // cache not expired. add to cache
-                valueCache0[value.hashValue] = true
+                valueCache0[value] = true
             }
         } else {
             if valueCache1Timestamp + (keyExpirySeconds / 2) < now {
@@ -69,10 +69,10 @@ class TimeBasedEquivalenceCache {
                 valueCache0Timestamp = now
                 valueCache0 = [:]
 
-                valueCache0[value.hashValue] = true
+                valueCache0[value] = true
             } else {
                 // cache not expired. add to cache
-                valueCache1[value.hashValue] = true
+                valueCache1[value] = true
             }
         }
     }
@@ -80,7 +80,7 @@ class TimeBasedEquivalenceCache {
     /// Adds a value to the cache if it wasn't there yet.
     /// - Parameter value: The value to add.
     /// - Returns: true if added, false if not added (because already exists).
-    public func addValueIfNotExists(_ value: any Hashable) -> Bool {
+    public func addValueIfNotExists(_ value: Int) -> Bool {
         lock.withLock {
             if unsafeValueExists(value) {
                 return false
