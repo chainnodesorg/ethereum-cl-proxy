@@ -4,7 +4,7 @@ import OpenAPIRuntime
 import OpenAPIVapor
 import Vapor
 
-struct ProxyController: RouteCollection, APIProtocol {
+class ProxyController: RouteCollection, APIProtocol {
     // MARK: - Properties
 
     private let jsonEncoder = JSONEncoder()
@@ -499,8 +499,7 @@ struct ProxyController: RouteCollection, APIProtocol {
     func eventstream(
         _ input: BeaconAPI.Operations.eventstream.Input
     ) async throws -> BeaconAPI.Operations.eventstream.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.eventstream(input)
     }
 
     func getStateValidators(

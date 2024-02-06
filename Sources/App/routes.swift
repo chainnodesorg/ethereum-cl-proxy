@@ -1,3 +1,5 @@
+import BeaconAPI
+import OpenAPIVapor
 import Vapor
 
 func routes(_ app: Application) throws {
@@ -8,5 +10,10 @@ func routes(_ app: Application) throws {
     // Robots
     try app.register(collection: RobotsController(app: app))
     // Proxy
-    try app.register(collection: ProxyController(app: app))
+    let proxyController = ProxyController(app: app)
+    try app.register(collection: proxyController)
+
+    // Register OpenAPI BeaconNode routes
+    let transport = VaporTransport(routesBuilder: app)
+    try proxyController.registerHandlers(on: transport, serverURL: URL(string: "/")!)
 }

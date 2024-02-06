@@ -1,5 +1,6 @@
 import BeaconAPI
 import Foundation
+import NIOConcurrencyHelpers
 import OpenAPIRuntime
 import OpenAPIVapor
 import Vapor
@@ -483,8 +484,44 @@ extension DownstreamBeaconService {
     func eventstream(
         _ input: BeaconAPI.Operations.eventstream.Input
     ) async throws -> BeaconAPI.Operations.eventstream.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let subscriptionTypes = input.query.topics
+
+        let subscriptionId = NIOLockedValueBox<String>("")
+
+        let stream = BeaconNodeEventStream(unsubscribeCallback: {
+            print("UNSUBSCRIBED!")
+            self.unsubscribe(subscriptionId: subscriptionId.withLockedValue { $0 })
+        })
+
+        subscriptionId.withLockedValue {
+            $0 = subscribe(eventTypes: subscriptionTypes, callback: stream.eventCallback(_:_:))
+        }
+
+        // Now stream the result
+
+        let chosenContentType = input.headers.accept.sortedByQuality()
+            .first ?? .init(contentType: .text_event_hyphen_stream)
+
+        let responseBody: BeaconAPI.Operations.eventstream.Output.Ok.Body
+        switch chosenContentType.contentType {
+        default:
+            responseBody = .text_event_hyphen_stream(
+                .init(
+                    stream.stream.map { event in
+                        ServerSentEvent(
+                            id: UUID().uuidString,
+                            event: event.event.rawValue,
+                            data: event.data,
+                            retry: 10000
+                        )
+                    }.asEncodedServerSentEvents(),
+                    length: .unknown,
+                    iterationBehavior: .single
+                )
+            )
+        }
+
+        return .ok(.init(body: responseBody))
     }
 
     func getStateValidators(
@@ -520,5 +557,43 @@ extension DownstreamBeaconService {
     ) async throws -> BeaconAPI.Operations.getGenesis.Output {
         print(input)
         throw OpenAPIError.notImplemented
+    }
+}
+
+final class BeaconNodeEventStream: Sendable {
+    struct BeaconNodeEvent {
+        let event: BeaconAPI.Operations.eventstream.Input.Query.topicsPayloadPayload
+        let data: String
+    }
+
+    typealias StreamType = AsyncStream<BeaconNodeEvent>
+
+    private let unsubscribeCallback: () -> Void
+
+    let stream: StreamType
+    private let continuation: StreamType.Continuation
+
+    init(unsubscribeCallback: @escaping () -> Void) {
+        self.unsubscribeCallback = unsubscribeCallback
+
+        let (stream, continuation) = StreamType.makeStream()
+        self.stream = stream
+        self.continuation = continuation
+
+        continuation.onTermination = { termination in
+            switch termination {
+            case .cancelled, .finished:
+                unsubscribeCallback()
+            @unknown default:
+                unsubscribeCallback()
+            }
+        }
+    }
+
+    func eventCallback(
+        _ event: BeaconAPI.Operations.eventstream.Input.Query.topicsPayloadPayload,
+        _ data: String
+    ) {
+        continuation.yield(.init(event: event, data: data))
     }
 }

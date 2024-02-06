@@ -75,11 +75,16 @@ class DownstreamBeaconService {
 
         var beaconNodeConnections: [BeaconNodeConnection] = []
         for endpoint in endpoints {
-            beaconNodeConnections.append(BeaconNodeConnection(
+            let beaconNodeConnection = BeaconNodeConnection(
                 app: app,
                 beaconNodeUrl: endpoint,
-                eventCallback: eventResponse(event:data:decodedData:)
-            ))
+                eventCallback: { _, _, _ in }
+            )
+            beaconNodeConnection.eventCallback.withLockedValue {
+                $0 = self.eventResponse(beaconNode: beaconNodeConnection)
+            }
+
+            beaconNodeConnections.append(beaconNodeConnection)
         }
 
         self.beaconNodeConnections.withLockedValue {
@@ -87,18 +92,26 @@ class DownstreamBeaconService {
         }
     }
 
-    private func eventResponse(
-        event: BeaconAPI.Operations.eventstream.Input.Query.topicsPayloadPayload,
-        data: String,
-        decodedData: any Codable & Hashable & Sendable
-    ) {
-        let wasAddedBecauseNotSeenYet = eventsCache.addValueIfNotExists(decodedData)
+    private func eventResponse(beaconNode: BeaconNodeConnection) -> (
+        _ event: BeaconAPI.Operations.eventstream.Input.Query.topicsPayloadPayload,
+        _ data: String,
+        _ decodedData: any Codable & Hashable & Sendable
+    ) -> Void {
+        { event, data, decodedData in
+            if let beaconNodeExcluded = self.excludedBeaconNodeConnections.withLockedValue({ $0[beaconNode] }),
+               beaconNodeExcluded
+            {
+                return
+            }
 
-        if wasAddedBecauseNotSeenYet {
-            // Distribute the new event
-            let allSubscriptions = upstreamEventSubscriptions.withLockedValue { $0[event] } ?? [:]
-            for subscription in allSubscriptions {
-                subscription.value(event, data)
+            let wasAddedBecauseNotSeenYet = self.eventsCache.addValueIfNotExists(decodedData)
+
+            if wasAddedBecauseNotSeenYet {
+                // Distribute the new event
+                let allSubscriptions = self.upstreamEventSubscriptions.withLockedValue { $0[event] } ?? [:]
+                for subscription in allSubscriptions {
+                    subscription.value(event, data)
+                }
             }
         }
     }
