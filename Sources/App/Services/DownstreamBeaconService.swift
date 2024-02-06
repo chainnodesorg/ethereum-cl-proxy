@@ -110,8 +110,7 @@ class DownstreamBeaconService {
                 return
             }
 
-            let copyOfDecodedData = decodedData
-            let wasAddedBecauseNotSeenYet = self.eventsCache.addValueIfNotExists(copyOfDecodedData.hashValue)
+            let wasAddedBecauseNotSeenYet = self.eventsCache.addValueIfNotExists(decodedData.hashValue)
 
             if wasAddedBecauseNotSeenYet {
                 // Distribute the new event
