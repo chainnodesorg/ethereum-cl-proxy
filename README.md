@@ -77,7 +77,7 @@ THIRD PARTY SOFTWARE FUNCTIONS.
 
 If you tested the proxy with other CLs, feel free to open a PR and extend this list.
 
-# Risks
+## Risks
 
 As the proxy emits events of multiple sources, the likelihood of emitting reorgs increases. This means if your VC
 malfunctions (corrupt anti-slashing db, bad logic, etc.), the probability of a slashing event increases vs a single
@@ -92,7 +92,7 @@ load between those multiple replicas (best case in different zones / datacenters
 goes down, your validators won't be down. But please make sure to also distribute your configured CLs to multiple
 datacenters.
 
-# Benefits
+## Benefits
 
 Because multiple CLs event streams are combined, participation rate increases as a single node being a little behind
 doesn't mean your VC won't get the block in time.
