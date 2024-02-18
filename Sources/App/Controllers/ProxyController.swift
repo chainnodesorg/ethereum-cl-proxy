@@ -524,8 +524,7 @@ class ProxyController: RouteCollection, APIProtocol {
     func getStateFork(
         _ input: BeaconAPI.Operations.getStateFork.Input
     ) async throws -> BeaconAPI.Operations.getStateFork.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.getStateFork(input)
     }
 
     func getStateRoot(
@@ -538,7 +537,6 @@ class ProxyController: RouteCollection, APIProtocol {
     func getGenesis(
         _ input: BeaconAPI.Operations.getGenesis.Input
     ) async throws -> BeaconAPI.Operations.getGenesis.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.getGenesis(input)
     }
 }

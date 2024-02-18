@@ -97,7 +97,7 @@ datacenters.
 Because multiple CLs event streams are combined, participation rate increases as a single node being a little behind
 doesn't mean your VC won't get the block in time.
 
-Similarly, inclusion delay will be reduced as your will likely always have at least one CL that emits blocks in time.
+Similarly, inclusion delay will be reduced as you will likely always have at least one CL that emits blocks in time.
 
 Vote accuracy might actually decrease if you don't configure your VC correctly. As multiple CLs means you will
 receive blocks much faster, you might receive wrong chains more often than with a single CL.

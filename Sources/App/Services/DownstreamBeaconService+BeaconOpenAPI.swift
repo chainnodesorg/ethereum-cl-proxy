@@ -551,8 +551,22 @@ extension DownstreamBeaconService: APIProtocol {
     func getStateFork(
         _ input: BeaconAPI.Operations.getStateFork.Input
     ) async throws -> BeaconAPI.Operations.getStateFork.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.getStateFork(input)
+                }
+            },
+            timeout: .milliseconds(500)
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok.body.json }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(.init(body: .json(chosenResponse.0)))
     }
 
     func getStateRoot(
@@ -563,10 +577,17 @@ extension DownstreamBeaconService: APIProtocol {
     }
 
     func getGenesis(
-        _ input: BeaconAPI.Operations.getGenesis.Input
+        _: BeaconAPI.Operations.getGenesis.Input
     ) async throws -> BeaconAPI.Operations.getGenesis.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+        let chainStatusArray = connections.compactMap {
+            $0.chainStatus().genesis
+        }
+        if chainStatusArray.count < 1 {
+            throw Error.noHealthyBeaconNodeConnections
+        }
+
+        return .ok(.init(body: .json(chainStatusArray[0])))
     }
 }
 

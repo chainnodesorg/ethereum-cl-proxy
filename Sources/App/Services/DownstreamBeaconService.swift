@@ -24,6 +24,8 @@ class DownstreamBeaconService {
 
     enum Error: Swift.Error {
         case beaconNodeEndpointsMalformed(message: String)
+
+        case noHealthyBeaconNodeConnections
     }
 
     /// The callback used to notify upstream subscribers of new events.
@@ -152,6 +154,16 @@ class DownstreamBeaconService {
     }
 
     // MARK: - Health Checks
+
+    func forceHealthyBeaconNodeConnections() throws -> [BeaconNodeConnection] {
+        let connections = healthyBeaconNodeConnections()
+
+        if connections.count < 1 {
+            throw Error.noHealthyBeaconNodeConnections
+        }
+
+        return connections
+    }
 
     private func healthyBeaconNodeConnections() -> [BeaconNodeConnection] {
         // Filter generally unhealthy node
