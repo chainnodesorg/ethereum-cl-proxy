@@ -24,14 +24,12 @@ WORKDIR ${PROXY_BUILD_DIR}
 # This creates a cached layer that can be reused
 # as long as your Package.swift/Package.resolved
 # files do not change.
-COPY packages/proxy/Package.* ./
-# Need to copy local dependencies before resolving
-COPY packages/swift-commons/ ../swift-commons/
+COPY ./Package.* ./
 # Resolve dependencies
 RUN swift package resolve
 
 # Copy entire repo into container
-COPY packages/proxy/ .
+COPY . .
 
 # Build everything, with optimizations
 # --static-swift-stdlib
