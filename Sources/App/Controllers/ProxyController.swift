@@ -381,8 +381,7 @@ class ProxyController: RouteCollection, APIProtocol {
     func getDepositContract(
         _ input: BeaconAPI.Operations.getDepositContract.Input
     ) async throws -> BeaconAPI.Operations.getDepositContract.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.getDepositContract(input)
     }
 
     func getAttesterDuties(
