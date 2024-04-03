@@ -13,7 +13,8 @@ concurrency:
 jobs:
   # The docker image
   docker:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04-32c-128g
+    timeout-minutes: 30
 
     steps:
       # Checkout Step
@@ -33,11 +34,13 @@ jobs:
         env:
           SHA_TAG: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           LATEST_TAG: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          VERSION_TAG: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
         run: |
           export SHA_7=$(echo $GITHUB_SHA | head -c7)
           echo "SHA_TAG=$SHA_TAG:$SHA_7" >> $GITHUB_ENV
           echo "STAGING_TAG=$STAGING_TAG" >> $GITHUB_ENV
           echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+          echo "VERSION_TAG=$VERSION_TAG" >> $GITHUB_ENV
 
       # Build Step
       - name: Build container image
@@ -51,3 +54,8 @@ jobs:
       - name: Retag Docker Image latest
         if: github.ref == 'refs/heads/main'
         run: docker tag ${{ env.SHA_TAG }} ${{ env.LATEST_TAG }} && docker push ${{ env.LATEST_TAG }}
+
+      # Tag as tag if on tag
+      - name: Retag Docker Image latest
+        if: startsWith(github.ref, 'refs/tags/')
+        run: docker tag ${{ env.SHA_TAG }} ${{ env.VERSION_TAG }} && docker push ${{ env.VERSION_TAG }}
