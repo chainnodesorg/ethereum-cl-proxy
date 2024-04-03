@@ -350,8 +350,7 @@ class ProxyController: RouteCollection, APIProtocol {
     func getNodeVersion(
         _ input: BeaconAPI.Operations.getNodeVersion.Input
     ) async throws -> BeaconAPI.Operations.getNodeVersion.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.getNodeVersion(input)
     }
 
     func getSyncingStatus(
