@@ -1,4 +1,4 @@
-FROM swift:5.9.2-jammy
+FROM swift:5.10-jammy
 
 # update
 RUN apt-get -qq update

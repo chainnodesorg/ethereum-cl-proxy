@@ -32,6 +32,24 @@ class ProxyController: RouteCollection, APIProtocol {
         case notImplemented
     }
 
+    // NEW IN 2.5.0
+
+    func postStateValidators(
+        _ input: BeaconAPI.Operations.postStateValidators.Input
+    ) async throws -> BeaconAPI.Operations.postStateValidators.Output {
+        print(input)
+        throw OpenAPIError.notImplemented
+    }
+
+    func postStateValidatorBalances(
+        _ input: BeaconAPI.Operations.postStateValidatorBalances.Input
+    ) async throws -> BeaconAPI.Operations.postStateValidatorBalances.Output {
+        print(input)
+        throw OpenAPIError.notImplemented
+    }
+
+    // END NEW IN 2.5.0
+
     func getStateValidator(
         _ input: BeaconAPI.Operations.getStateValidator.Input
     ) async throws -> BeaconAPI.Operations.getStateValidator.Output {
@@ -86,8 +104,7 @@ class ProxyController: RouteCollection, APIProtocol {
     func publishBlindedBlock(
         _ input: BeaconAPI.Operations.publishBlindedBlock.Input
     ) async throws -> BeaconAPI.Operations.publishBlindedBlock.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.publishBlindedBlock(input)
     }
 
     func publishBlindedBlockV2(
@@ -95,22 +112,19 @@ class ProxyController: RouteCollection, APIProtocol {
     ) async throws -> BeaconAPI
         .Operations.publishBlindedBlockV2.Output
     {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.publishBlindedBlockV2(input)
     }
 
     func publishBlock(
         _ input: BeaconAPI.Operations.publishBlock.Input
     ) async throws -> BeaconAPI.Operations.publishBlock.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.publishBlock(input)
     }
 
     func publishBlockV2(
         _ input: BeaconAPI.Operations.publishBlockV2.Input
     ) async throws -> BeaconAPI.Operations.publishBlockV2.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.publishBlockV2(input)
     }
 
     func getBlockV2(
@@ -214,8 +228,7 @@ class ProxyController: RouteCollection, APIProtocol {
     func submitPoolAttestations(
         _ input: BeaconAPI.Operations.submitPoolAttestations.Input
     ) async throws -> BeaconAPI.Operations.submitPoolAttestations.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.submitPoolAttestations(input)
     }
 
     func getPoolAttesterSlashings(
@@ -249,8 +262,7 @@ class ProxyController: RouteCollection, APIProtocol {
     func submitPoolSyncCommitteeSignatures(
         _ input: BeaconAPI.Operations.submitPoolSyncCommitteeSignatures.Input
     ) async throws -> BeaconAPI.Operations.submitPoolSyncCommitteeSignatures.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.submitPoolSyncCommitteeSignatures(input)
     }
 
     func getPoolVoluntaryExits(
@@ -345,8 +357,7 @@ class ProxyController: RouteCollection, APIProtocol {
     func getSyncingStatus(
         _ input: BeaconAPI.Operations.getSyncingStatus.Input
     ) async throws -> BeaconAPI.Operations.getSyncingStatus.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.getSyncingStatus(input)
     }
 
     func getHealth(
@@ -364,8 +375,7 @@ class ProxyController: RouteCollection, APIProtocol {
     }
 
     func getSpec(_ input: BeaconAPI.Operations.getSpec.Input) async throws -> BeaconAPI.Operations.getSpec.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.getSpec(input)
     }
 
     func getDepositContract(
@@ -378,127 +388,109 @@ class ProxyController: RouteCollection, APIProtocol {
     func getAttesterDuties(
         _ input: BeaconAPI.Operations.getAttesterDuties.Input
     ) async throws -> BeaconAPI.Operations.getAttesterDuties.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.getAttesterDuties(input)
     }
 
     func getProposerDuties(
         _ input: BeaconAPI.Operations.getProposerDuties.Input
     ) async throws -> BeaconAPI.Operations.getProposerDuties.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.getProposerDuties(input)
     }
 
     func getSyncCommitteeDuties(
         _ input: BeaconAPI.Operations.getSyncCommitteeDuties.Input
     ) async throws -> BeaconAPI.Operations.getSyncCommitteeDuties.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.getSyncCommitteeDuties(input)
     }
 
     func produceBlockV2(
         _ input: BeaconAPI.Operations.produceBlockV2.Input
     ) async throws -> BeaconAPI.Operations.produceBlockV2.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.produceBlockV2(input)
     }
 
     func produceBlockV3(
         _ input: BeaconAPI.Operations.produceBlockV3.Input
     ) async throws -> BeaconAPI.Operations.produceBlockV3.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.produceBlockV3(input)
     }
 
     func produceBlindedBlock(
         _ input: BeaconAPI.Operations.produceBlindedBlock.Input
     ) async throws -> BeaconAPI.Operations.produceBlindedBlock.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.produceBlindedBlock(input)
     }
 
     func produceAttestationData(
         _ input: BeaconAPI.Operations.produceAttestationData.Input
     ) async throws -> BeaconAPI.Operations.produceAttestationData.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.produceAttestationData(input)
     }
 
     func getAggregatedAttestation(
         _ input: BeaconAPI.Operations.getAggregatedAttestation.Input
     ) async throws -> BeaconAPI.Operations.getAggregatedAttestation.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.getAggregatedAttestation(input)
     }
 
     func publishAggregateAndProofs(
         _ input: BeaconAPI.Operations.publishAggregateAndProofs.Input
     ) async throws -> BeaconAPI.Operations.publishAggregateAndProofs.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.publishAggregateAndProofs(input)
     }
 
     func prepareBeaconCommitteeSubnet(
         _ input: BeaconAPI.Operations.prepareBeaconCommitteeSubnet.Input
     ) async throws -> BeaconAPI.Operations.prepareBeaconCommitteeSubnet.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.prepareBeaconCommitteeSubnet(input)
     }
 
     func prepareSyncCommitteeSubnets(
         _ input: BeaconAPI.Operations.prepareSyncCommitteeSubnets.Input
     ) async throws -> BeaconAPI.Operations.prepareSyncCommitteeSubnets.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.prepareSyncCommitteeSubnets(input)
     }
 
     func submitBeaconCommitteeSelections(
         _ input: BeaconAPI.Operations.submitBeaconCommitteeSelections.Input
     ) async throws -> BeaconAPI.Operations.submitBeaconCommitteeSelections.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.submitBeaconCommitteeSelections(input)
     }
 
     func produceSyncCommitteeContribution(
         _ input: BeaconAPI.Operations.produceSyncCommitteeContribution.Input
     ) async throws -> BeaconAPI.Operations.produceSyncCommitteeContribution.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.produceSyncCommitteeContribution(input)
     }
 
     func submitSyncCommitteeSelections(
         _ input: BeaconAPI.Operations.submitSyncCommitteeSelections.Input
     ) async throws -> BeaconAPI.Operations.submitSyncCommitteeSelections.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.submitSyncCommitteeSelections(input)
     }
 
     func publishContributionAndProofs(
         _ input: BeaconAPI.Operations.publishContributionAndProofs.Input
     ) async throws -> BeaconAPI.Operations.publishContributionAndProofs.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.publishContributionAndProofs(input)
     }
 
     func prepareBeaconProposer(
         _ input: BeaconAPI.Operations.prepareBeaconProposer.Input
     ) async throws -> BeaconAPI.Operations.prepareBeaconProposer.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.prepareBeaconProposer(input)
     }
 
     func registerValidator(
         _ input: BeaconAPI.Operations.registerValidator.Input
     ) async throws -> BeaconAPI.Operations.registerValidator.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.registerValidator(input)
     }
 
     func getLiveness(
         _ input: BeaconAPI.Operations.getLiveness.Input
     ) async throws -> BeaconAPI.Operations.getLiveness.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.getLiveness(input)
     }
 
     func eventstream(
@@ -510,8 +502,7 @@ class ProxyController: RouteCollection, APIProtocol {
     func getStateValidators(
         _ input: BeaconAPI.Operations.getStateValidators.Input
     ) async throws -> BeaconAPI.Operations.getStateValidators.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.getStateValidators(input)
     }
 
     func getStateFinalityCheckpoints(

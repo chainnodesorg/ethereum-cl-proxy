@@ -18,6 +18,24 @@ extension DownstreamBeaconService: APIProtocol {
         case notImplemented
     }
 
+    // NEW IN 2.5.0
+
+    func postStateValidators(
+        _ input: BeaconAPI.Operations.postStateValidators.Input
+    ) async throws -> BeaconAPI.Operations.postStateValidators.Output {
+        print(input)
+        throw OpenAPIError.notImplemented
+    }
+
+    func postStateValidatorBalances(
+        _ input: BeaconAPI.Operations.postStateValidatorBalances.Input
+    ) async throws -> BeaconAPI.Operations.postStateValidatorBalances.Output {
+        print(input)
+        throw OpenAPIError.notImplemented
+    }
+
+    // END NEW IN 2.5.0
+
     func getStateValidator(
         _ input: BeaconAPI.Operations.getStateValidator.Input
     ) async throws -> BeaconAPI.Operations.getStateValidator.Output {
@@ -72,8 +90,22 @@ extension DownstreamBeaconService: APIProtocol {
     func publishBlindedBlock(
         _ input: BeaconAPI.Operations.publishBlindedBlock.Input
     ) async throws -> BeaconAPI.Operations.publishBlindedBlock.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.publishBlindedBlock(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(chosenResponse.0)
     }
 
     func publishBlindedBlockV2(
@@ -81,22 +113,64 @@ extension DownstreamBeaconService: APIProtocol {
     ) async throws -> BeaconAPI
         .Operations.publishBlindedBlockV2.Output
     {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.publishBlindedBlockV2(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(chosenResponse.0)
     }
 
     func publishBlock(
         _ input: BeaconAPI.Operations.publishBlock.Input
     ) async throws -> BeaconAPI.Operations.publishBlock.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.publishBlock(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(chosenResponse.0)
     }
 
     func publishBlockV2(
         _ input: BeaconAPI.Operations.publishBlockV2.Input
     ) async throws -> BeaconAPI.Operations.publishBlockV2.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.publishBlockV2(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(chosenResponse.0)
     }
 
     func getBlockV2(
@@ -200,8 +274,22 @@ extension DownstreamBeaconService: APIProtocol {
     func submitPoolAttestations(
         _ input: BeaconAPI.Operations.submitPoolAttestations.Input
     ) async throws -> BeaconAPI.Operations.submitPoolAttestations.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.submitPoolAttestations(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(chosenResponse.0)
     }
 
     func getPoolAttesterSlashings(
@@ -235,8 +323,22 @@ extension DownstreamBeaconService: APIProtocol {
     func submitPoolSyncCommitteeSignatures(
         _ input: BeaconAPI.Operations.submitPoolSyncCommitteeSignatures.Input
     ) async throws -> BeaconAPI.Operations.submitPoolSyncCommitteeSignatures.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.submitPoolSyncCommitteeSignatures(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(chosenResponse.0)
     }
 
     func getPoolVoluntaryExits(
@@ -331,8 +433,22 @@ extension DownstreamBeaconService: APIProtocol {
     func getSyncingStatus(
         _ input: BeaconAPI.Operations.getSyncingStatus.Input
     ) async throws -> BeaconAPI.Operations.getSyncingStatus.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.getSyncingStatus(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok.body.json }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(.init(body: .json(chosenResponse.0)))
     }
 
     func getHealth(
@@ -350,8 +466,22 @@ extension DownstreamBeaconService: APIProtocol {
     }
 
     func getSpec(_ input: BeaconAPI.Operations.getSpec.Input) async throws -> BeaconAPI.Operations.getSpec.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.getSpec(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok.body.json }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(.init(body: .json(chosenResponse.0)))
     }
 
     func getDepositContract(
@@ -364,127 +494,379 @@ extension DownstreamBeaconService: APIProtocol {
     func getAttesterDuties(
         _ input: BeaconAPI.Operations.getAttesterDuties.Input
     ) async throws -> BeaconAPI.Operations.getAttesterDuties.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.getAttesterDuties(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok.body.json }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(.init(body: .json(chosenResponse.0)))
     }
 
     func getProposerDuties(
         _ input: BeaconAPI.Operations.getProposerDuties.Input
     ) async throws -> BeaconAPI.Operations.getProposerDuties.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.getProposerDuties(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok.body.json }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(.init(body: .json(chosenResponse.0)))
     }
 
     func getSyncCommitteeDuties(
         _ input: BeaconAPI.Operations.getSyncCommitteeDuties.Input
     ) async throws -> BeaconAPI.Operations.getSyncCommitteeDuties.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.getSyncCommitteeDuties(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok.body.json }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(.init(body: .json(chosenResponse.0)))
     }
 
     func produceBlockV2(
         _ input: BeaconAPI.Operations.produceBlockV2.Input
     ) async throws -> BeaconAPI.Operations.produceBlockV2.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.produceBlockV2(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(.init(headers: chosenResponse.0.headers, body: chosenResponse.0.body))
     }
 
     func produceBlockV3(
         _ input: BeaconAPI.Operations.produceBlockV3.Input
     ) async throws -> BeaconAPI.Operations.produceBlockV3.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.produceBlockV3(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(.init(headers: chosenResponse.0.headers, body: chosenResponse.0.body))
     }
 
     func produceBlindedBlock(
         _ input: BeaconAPI.Operations.produceBlindedBlock.Input
     ) async throws -> BeaconAPI.Operations.produceBlindedBlock.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.produceBlindedBlock(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(.init(headers: chosenResponse.0.headers, body: chosenResponse.0.body))
     }
 
     func produceAttestationData(
         _ input: BeaconAPI.Operations.produceAttestationData.Input
     ) async throws -> BeaconAPI.Operations.produceAttestationData.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.produceAttestationData(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok.body.json }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(.init(body: .json(chosenResponse.0)))
     }
 
     func getAggregatedAttestation(
         _ input: BeaconAPI.Operations.getAggregatedAttestation.Input
     ) async throws -> BeaconAPI.Operations.getAggregatedAttestation.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.getAggregatedAttestation(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok.body.json }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(.init(body: .json(chosenResponse.0)))
     }
 
     func publishAggregateAndProofs(
         _ input: BeaconAPI.Operations.publishAggregateAndProofs.Input
     ) async throws -> BeaconAPI.Operations.publishAggregateAndProofs.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.publishAggregateAndProofs(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(chosenResponse.0)
     }
 
     func prepareBeaconCommitteeSubnet(
         _ input: BeaconAPI.Operations.prepareBeaconCommitteeSubnet.Input
     ) async throws -> BeaconAPI.Operations.prepareBeaconCommitteeSubnet.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.prepareBeaconCommitteeSubnet(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(chosenResponse.0)
     }
 
     func prepareSyncCommitteeSubnets(
         _ input: BeaconAPI.Operations.prepareSyncCommitteeSubnets.Input
     ) async throws -> BeaconAPI.Operations.prepareSyncCommitteeSubnets.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.prepareSyncCommitteeSubnets(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(chosenResponse.0)
     }
 
     func submitBeaconCommitteeSelections(
         _ input: BeaconAPI.Operations.submitBeaconCommitteeSelections.Input
     ) async throws -> BeaconAPI.Operations.submitBeaconCommitteeSelections.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.submitBeaconCommitteeSelections(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok.body.json }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(.init(body: .json(chosenResponse.0)))
     }
 
     func produceSyncCommitteeContribution(
         _ input: BeaconAPI.Operations.produceSyncCommitteeContribution.Input
     ) async throws -> BeaconAPI.Operations.produceSyncCommitteeContribution.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.produceSyncCommitteeContribution(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok.body.json }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(.init(body: .json(chosenResponse.0)))
     }
 
     func submitSyncCommitteeSelections(
         _ input: BeaconAPI.Operations.submitSyncCommitteeSelections.Input
     ) async throws -> BeaconAPI.Operations.submitSyncCommitteeSelections.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.submitSyncCommitteeSelections(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok.body.json }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(.init(body: .json(chosenResponse.0)))
     }
 
     func publishContributionAndProofs(
         _ input: BeaconAPI.Operations.publishContributionAndProofs.Input
     ) async throws -> BeaconAPI.Operations.publishContributionAndProofs.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.publishContributionAndProofs(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(chosenResponse.0)
     }
 
     func prepareBeaconProposer(
         _ input: BeaconAPI.Operations.prepareBeaconProposer.Input
     ) async throws -> BeaconAPI.Operations.prepareBeaconProposer.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.prepareBeaconProposer(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(chosenResponse.0)
     }
 
     func registerValidator(
         _ input: BeaconAPI.Operations.registerValidator.Input
     ) async throws -> BeaconAPI.Operations.registerValidator.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.registerValidator(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(chosenResponse.0)
     }
 
     func getLiveness(
         _ input: BeaconAPI.Operations.getLiveness.Input
     ) async throws -> BeaconAPI.Operations.getLiveness.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.getLiveness(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok.body.json }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(.init(body: .json(chosenResponse.0)))
     }
 
     func eventstream(
@@ -537,8 +919,22 @@ extension DownstreamBeaconService: APIProtocol {
     func getStateValidators(
         _ input: BeaconAPI.Operations.getStateValidators.Input
     ) async throws -> BeaconAPI.Operations.getStateValidators.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.getStateValidators(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok.body.json }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(.init(body: .json(chosenResponse.0)))
     }
 
     func getStateFinalityCheckpoints(
@@ -559,7 +955,7 @@ extension DownstreamBeaconService: APIProtocol {
                     try await connection.beaconNodeClient.getStateFork(input)
                 }
             },
-            timeout: .milliseconds(500)
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
         )
 
         let mapped = responses.compactMap { try? $0.get().ok.body.json }

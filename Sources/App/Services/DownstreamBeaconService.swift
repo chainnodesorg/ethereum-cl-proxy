@@ -20,7 +20,7 @@ class DownstreamBeaconService {
     private let excludedBeaconNodeConnections: NIOLockedValueBox<[BeaconNodeConnection: Bool]> = .init([:])
 
     /// Cached events to prevent sending the same event to subscribers twice
-    private let eventsCache = TimeBasedEquivalenceCache(keyExpirySeconds: 600)
+    private let eventsCache: MaxElementEquivalenceCache
 
     enum Error: Swift.Error {
         case beaconNodeEndpointsMalformed(message: String)
@@ -49,6 +49,9 @@ class DownstreamBeaconService {
 
     init(app: Application) throws {
         self.app = app
+        eventsCache = MaxElementEquivalenceCache(
+            maxNumberOfValues: 100_000
+        )
 
         try setup()
 
@@ -86,11 +89,8 @@ class DownstreamBeaconService {
             let beaconNodeConnection = BeaconNodeConnection(
                 app: app,
                 beaconNodeUrl: endpoint,
-                eventCallback: { _, _, _ in }
+                eventCallback: eventResponse
             )
-            beaconNodeConnection.eventCallback.withLockedValue {
-                $0 = self.eventResponse(beaconNode: beaconNodeConnection)
-            }
 
             beaconNodeConnections.append(beaconNodeConnection)
         }
@@ -100,26 +100,25 @@ class DownstreamBeaconService {
         }
     }
 
-    private func eventResponse(beaconNode: BeaconNodeConnection) -> (
-        _ event: BeaconAPI.Operations.eventstream.Input.Query.topicsPayloadPayload,
-        _ data: String,
-        _ decodedData: any Codable & Hashable & Sendable
-    ) -> Void {
-        { event, data, decodedData in
-            if let beaconNodeExcluded = self.excludedBeaconNodeConnections.withLockedValue({ $0[beaconNode] }),
-               beaconNodeExcluded
-            {
-                return
-            }
+    private func eventResponse(
+        beaconNode: BeaconNodeConnection,
+        event: BeaconAPI.Operations.eventstream.Input.Query.topicsPayloadPayload,
+        data: String,
+        decodedData: any Codable & Hashable & Sendable
+    ) {
+        if let beaconNodeExcluded = excludedBeaconNodeConnections.withLockedValue({ $0[beaconNode] }),
+           beaconNodeExcluded
+        {
+            return
+        }
 
-            let wasAddedBecauseNotSeenYet = self.eventsCache.addValueIfNotExists(decodedData.hashValue)
+        let wasAddedBecauseNotSeenYet = eventsCache.addValueIfNotExists(decodedData)
 
-            if wasAddedBecauseNotSeenYet {
-                // Distribute the new event
-                let allSubscriptions = self.upstreamEventSubscriptions.withLockedValue { $0[event] } ?? [:]
-                for subscription in allSubscriptions {
-                    subscription.value(event, data)
-                }
+        if wasAddedBecauseNotSeenYet {
+            // Distribute the new event
+            let allSubscriptions = upstreamEventSubscriptions.withLockedValue { $0[event] } ?? [:]
+            for subscription in allSubscriptions {
+                subscription.value(event, data)
             }
         }
     }
@@ -217,7 +216,8 @@ class DownstreamBeaconService {
         var genesisDataHashes: [Int: Int] = [:]
         for beaconNode in beaconNodesWithStatus {
             // Fetch headSlot
-            guard let headSlotString = beaconNode.status.syncing.data?.head_slot?.value2, let headSlot = Int64(
+            let headSlotString = beaconNode.status.syncing.data.head_slot
+            guard let headSlot = Int64(
                 headSlotString,
                 radix: 10
             ) else {
@@ -229,18 +229,15 @@ class DownstreamBeaconService {
             }
 
             // Fetch forkVersion
-            guard let forkVersionString = beaconNode.status.fork.data?.current_version,
-                  let forkVersion = try? EthereumData(ethereumValue: forkVersionString)
-            else {
+            let forkVersionString = beaconNode.status.fork.data.current_version
+            guard let forkVersion = try? EthereumData(ethereumValue: forkVersionString) else {
                 continue
             }
 
             forkVersions[forkVersion] = (forkVersions[forkVersion] ?? 0) + 1
 
             // Select genesisDataHash
-            guard let genesisDataHash = beaconNode.status.genesis.data?.hashValue else {
-                continue
-            }
+            let genesisDataHash = beaconNode.status.genesis.data.hashValue
 
             genesisDataHashes[genesisDataHash] = (genesisDataHashes[genesisDataHash] ?? 0) + 1
 

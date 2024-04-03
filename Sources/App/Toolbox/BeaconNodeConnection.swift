@@ -33,13 +33,12 @@ class BeaconNodeConnection {
     /// The event types this beacon node is known to support / should try to subscribe to.
     let allowedEventTypes: [BeaconAPI.Operations.eventstream.Input.Query.topicsPayloadPayload]
 
-    var eventCallback: NIOLockedValueBox<
-        (
-            BeaconAPI.Operations.eventstream.Input.Query.topicsPayloadPayload,
-            String,
-            any Codable & Hashable & Sendable
-        ) -> Void
-    >
+    let eventCallback: (
+        BeaconNodeConnection,
+        BeaconAPI.Operations.eventstream.Input.Query.topicsPayloadPayload,
+        String,
+        any Codable & Hashable & Sendable
+    ) -> Void
 
     // MARK: - EVENT SUBSCRIPTION Properties
 
@@ -100,6 +99,7 @@ class BeaconNodeConnection {
         app: Application,
         beaconNodeUrl: URL,
         eventCallback: @escaping (
+            BeaconNodeConnection,
             BeaconAPI.Operations.eventstream.Input.Query.topicsPayloadPayload,
             String,
             any Codable & Hashable & Sendable
@@ -131,7 +131,7 @@ class BeaconNodeConnection {
 
         self.allowedEventTypes = allowedEventTypes
 
-        self.eventCallback = .init(eventCallback)
+        self.eventCallback = eventCallback
 
         // Subscribe to events for this beacon node.
         initialSubscribeToNextEvent()
@@ -181,14 +181,14 @@ class BeaconNodeConnection {
                 self.currentSyncHealthCheckResponse.withLockedValue { $0 = (response: syncStatusJson, time: Date()) }
 
                 // Now contact upstream.
-                self.eventCallback.withLockedValue { $0(eventType, eventDataString, eventData) }
+                self.eventCallback(self, eventType, eventDataString, eventData)
             }.whenFailure { _ in
                 self.app.logger
                     .error("Could not fetch syncing status after head event - Beacon Node: \(self.beaconNodeUrl)")
             }
         } else {
             // Just emit event immediately to upstream.
-            eventCallback.withLockedValue { $0(eventType, eventDataString, eventData) }
+            eventCallback(self, eventType, eventDataString, eventData)
         }
     }
 
