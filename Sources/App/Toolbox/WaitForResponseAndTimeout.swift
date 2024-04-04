@@ -21,25 +21,25 @@ enum WaitForResponseAndTimeout {
             throw Error.noResponsesError
         }
 
-        var responseCounts: [Response: Int] = [:]
-        for response in responses {
-            responseCounts[response] = (responseCounts[response] ?? 0) + 1
-        }
+        // Caution: Dictionaries don't like openapi types.
+        // The below is O(n^2) but unless upstream fixes the issue
+        // that `.jsonResponse` values do not correctly follow Hashable rules,
+        // we need to go with this.
+        // Plus, even with 11 beacon nodes (max recommended), this is only O(121).
+
+        let responseCounts: [(Response, Int)] = responses.map { element in
+            (element, responses.filter { $0 == element }.count)
+        }.sorted(by: {
+            $0.1 > $1.1
+        })
 
         guard responseCounts.count > 0 else {
             throw Error.noResponsesError
         }
 
-        var currentResponse: Response = responseCounts.first!.key
-        var maximumResponseCount = 0
-        for (key, value) in responseCounts {
-            if value > maximumResponseCount {
-                maximumResponseCount = value
-                currentResponse = key
-            }
-        }
+        let bestResponse = responseCounts.first!
 
-        return (currentResponse, maximumResponseCount)
+        return (bestResponse.0, bestResponse.1)
     }
 
     static func multiple<Response>(
