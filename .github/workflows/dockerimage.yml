@@ -24,6 +24,14 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3.2.0
 
+      - name: Cache .build folder
+        uses: actions/cache@v4.0.2
+        with:
+          path: .build
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}-${{ hashFiles('**/*.swift') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
       # Github Container Registry
       - name: Log in to the Container registry
         uses: docker/login-action@v2.1.0

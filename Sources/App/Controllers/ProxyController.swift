@@ -144,8 +144,7 @@ class ProxyController: RouteCollection, APIProtocol {
     func getBlockAttestations(
         _ input: BeaconAPI.Operations.getBlockAttestations.Input
     ) async throws -> BeaconAPI.Operations.getBlockAttestations.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.getBlockAttestations(input)
     }
 
     func getBlobSidecars(

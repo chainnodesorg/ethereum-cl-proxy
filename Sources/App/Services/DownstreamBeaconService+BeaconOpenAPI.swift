@@ -190,8 +190,22 @@ extension DownstreamBeaconService: APIProtocol {
     func getBlockAttestations(
         _ input: BeaconAPI.Operations.getBlockAttestations.Input
     ) async throws -> BeaconAPI.Operations.getBlockAttestations.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        let connections = try forceHealthyBeaconNodeConnections()
+
+        let responses = try await WaitForResponseAndTimeout.multiple(
+            connections.map { connection in
+                {
+                    try await connection.beaconNodeClient.getBlockAttestations(input)
+                }
+            },
+            timeout: Constants.FAST_REQUESTS_MAX_WAIT
+        )
+
+        let mapped = responses.compactMap { try? $0.get().ok.body.json }
+
+        let chosenResponse = try WaitForResponseAndTimeout.consensResponses(mapped)
+
+        return .ok(.init(body: .json(chosenResponse.0)))
     }
 
     func getBlobSidecars(

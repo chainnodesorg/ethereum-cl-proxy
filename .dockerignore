@@ -1,4 +1,1 @@
-.build/
-.swiftpm/
-Extensions/
-core
+.git/
