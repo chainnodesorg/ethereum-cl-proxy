@@ -71,6 +71,19 @@ jobs:
           --load
           .
 
+      # Now pull the .build folder
+      - name: Fetch build cache
+        run: >-
+          docker buildx build
+          --file ./Dockerfile
+          --target build
+          -t proxy-buildcache:latest
+          .
+          &&
+          docker run -d --name proxy-buildcache-container proxy-buildcache:latest /bin/sh
+          &&
+          docker container cp proxy-buildcache-container:/build/proxy/.build ./
+
       # Push Container Image Step
       - name: Push image to GitHub Container Registry
         run: docker push ${{ env.SHA_TAG }}
