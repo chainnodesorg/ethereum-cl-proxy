@@ -20,6 +20,10 @@ jobs:
       # Checkout Step
       - uses: actions/checkout@v3
 
+      # Docker Buildx extended build operations
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3.2.0
+
       # Github Container Registry
       - name: Log in to the Container registry
         uses: docker/login-action@v2.1.0
@@ -42,9 +46,22 @@ jobs:
           echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
           echo "VERSION_TAG=$VERSION_TAG" >> $GITHUB_ENV
 
+      # Expose tokens for next step
+      - name: GitHub Runtime
+        uses: crazy-max/ghaction-github-runtime@v3.0.0
       # Build Step
       - name: Build container image
-        run: docker build --file ./Dockerfile -t ${{ env.SHA_TAG }} .
+        env:
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: >-
+          docker buildx create --use --driver=docker-container &&
+          docker buildx build
+          --file ./Dockerfile
+          -t ${{ env.SHA_TAG }}
+          --cache-to type=gha,scope=$GITHUB_REF_NAME-proxy,mode=max
+          --cache-from type=gha,scope=$GITHUB_REF_NAME-proxy
+          --load
+          .
 
       # Push Container Image Step
       - name: Push image to GitHub Container Registry

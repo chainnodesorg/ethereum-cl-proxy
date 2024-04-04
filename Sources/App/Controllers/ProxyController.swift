@@ -296,8 +296,7 @@ class ProxyController: RouteCollection, APIProtocol {
     func getNextWithdrawals(
         _ input: BeaconAPI.Operations.getNextWithdrawals.Input
     ) async throws -> BeaconAPI.Operations.getNextWithdrawals.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.getNextWithdrawals(input)
     }
 
     func getStateV2(
@@ -369,8 +368,7 @@ class ProxyController: RouteCollection, APIProtocol {
     func getForkSchedule(
         _ input: BeaconAPI.Operations.getForkSchedule.Input
     ) async throws -> BeaconAPI.Operations.getForkSchedule.Output {
-        print(input)
-        throw OpenAPIError.notImplemented
+        try await app.downstreamBeaconService.getForkSchedule(input)
     }
 
     func getSpec(_ input: BeaconAPI.Operations.getSpec.Input) async throws -> BeaconAPI.Operations.getSpec.Output {
