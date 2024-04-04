@@ -78,6 +78,7 @@ jobs:
           --file ./Dockerfile
           --target build
           -t proxy-buildcache:latest
+          --load
           .
           &&
           docker run -d --name proxy-buildcache-container proxy-buildcache:latest /bin/sh
